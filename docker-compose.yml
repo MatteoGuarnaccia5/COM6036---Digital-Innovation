@@ -1,0 +1,91 @@
+# Three services, exactly as specified: web, scheduler, db.
+#
+# `docker compose up` on a clean machine is the whole setup. Credentials below
+# are development defaults committed on purpose so the stack needs no .env file
+# and no manual steps; override them for any real deployment.
+#
+# Note what is NOT here: `scheduler` does not depend on `web`, and `web` does
+# not depend on `scheduler`. They share the database and the two internal
+# packages, nothing else. Restarting or rebuilding either leaves the other
+# running untouched.
+
+name: com6036-task-manager
+
+x-database-url: &database-url postgres://tasks:tasks@db:5432/tasks
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: tasks
+      POSTGRES_PASSWORD: tasks
+      POSTGRES_DB: tasks
+      # Deterministic UTC storage; every timestamp in the schema is timestamptz.
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U tasks -d tasks']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      DATABASE_URL: *database-url
+      # Development-only signing key for the session cookie. Override in production.
+      SESSION_SECRET: dev-secret-do-not-use-in-production
+      # Seed the demo user and sample tasks, but only when the database is empty.
+      SEED_ON_START: 'true'
+      TZ: UTC
+    ports:
+      - '3000:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/scheduler.Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: *database-url
+      TICK_INTERVAL_MS: '60000'
+      TZ: UTC
+      # SMTP is unset by default, and that is the point: with no mail server
+      # configured the scheduler prints each reminder to stdout in full, so
+      # `docker compose logs -f scheduler` demonstrates delivery on a clean
+      # machine with no credentials.
+      #
+      # To send real mail, put the values in a `.env` file beside this one -
+      # it is git-ignored, so credentials never reach the repository:
+      #
+      #     SMTP_HOST=smtp.gmail.com
+      #     SMTP_PORT=587
+      #     SMTP_USER=you@gmail.com
+      #     SMTP_PASS=your-16-character-app-password
+      #     SMTP_FROM=you@gmail.com
+      #
+      # An empty SMTP_HOST is treated exactly as an unset one.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-tasks@localhost}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db-data:

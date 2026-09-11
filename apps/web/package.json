@@ -1,0 +1,52 @@
+{
+  "name": "@tasks/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Layer 1 - presentation. Express HTTP API, session handling, timezone conversion, and the React client it serves.",
+  "main": "./dist/server/app.js",
+  "exports": {
+    ".": {
+      "types": "./dist/server/app.d.ts",
+      "default": "./dist/server/app.js"
+    },
+    "./adapters/*": {
+      "types": "./dist/server/adapters/*.d.ts",
+      "default": "./dist/server/adapters/*.js"
+    },
+    "./presentation/*": {
+      "types": "./dist/server/presentation/*.d.ts",
+      "default": "./dist/server/presentation/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "build:client": "vite build",
+    "start": "node dist/server/index.js",
+    "dev": "tsx watch src/server/index.ts",
+    "dev:client": "vite"
+  },
+  "dependencies": {
+    "@tasks/core": "*",
+    "@tasks/data": "*",
+    "bcrypt": "^6.0.0",
+    "connect-pg-simple": "^10.0.0",
+    "express": "^5.0.0",
+    "express-session": "^1.19.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/connect-pg-simple": "^7.0.3",
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.19.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@types/supertest": "^7.2.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "supertest": "^7.2.2",
+    "vite": "^8.2.2"
+  }
+}

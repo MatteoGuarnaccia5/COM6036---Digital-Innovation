@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck and test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: tasks
+          POSTGRES_PASSWORD: tasks
+          POSTGRES_DB: tasks_test
+          TZ: UTC
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tasks -d tasks_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      # The integration and scheduler suites run against this throwaway database.
+      TEST_DATABASE_URL: postgres://tasks:tasks@localhost:5432/tasks_test
+      # Deliberately not UTC: the suite must pass regardless of the host's zone,
+      # which is what the DST test guards against.
+      TZ: America/New_York
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
+
+  # The unit, integration and scheduler suites all run against the source tree,
+  # so none of them can catch a fault in the *packaging* - a wrong
+  # .dockerignore pattern, a missing build step, a path that only resolves
+  # outside a container. Since `docker compose up` is the documented way to run
+  # this project, it is worth proving in CI rather than on a marker's laptop.
+  compose:
+    name: docker compose up
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build both images
+        run: docker compose build
+
+      - name: Start the stack
+        run: docker compose up -d --wait --wait-timeout 180
+
+      - name: The application answers, seeded and migrated
+        run: |
+          curl --fail --silent --show-error http://localhost:3000/api/v1/health
+          curl --fail --silent --show-error \
+            -X POST http://localhost:3000/api/v1/auth/login \
+            -H 'content-type: application/json' \
+            -d '{"email":"demo@example.com","password":"demo1234"}' \
+            -c cookies.txt > /dev/null
+          test "$(curl --fail --silent -b cookies.txt http://localhost:3000/api/v1/tasks \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).tasks.length))')" -ge 15
+
+      - name: The scheduler delivers a reminder
+        run: |
+          docker compose exec -T scheduler node apps/scheduler/dist/trigger-reminder.js
+          for _ in $(seq 1 40); do
+            if docker compose logs scheduler | grep -q 'REMINDER EMAIL'; then
+              docker compose logs scheduler | grep -A 6 'REMINDER EMAIL'
+              exit 0
+            fi
+            sleep 3
+          done
+          echo 'No reminder was delivered within 120s'
+          docker compose logs scheduler
+          exit 1
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

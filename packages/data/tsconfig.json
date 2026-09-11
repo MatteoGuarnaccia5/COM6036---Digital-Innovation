@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*.ts"],
+  "references": [{ "path": "../core" }],
+  "//": "Data access references core for its *port interfaces* only - the dependency inversion that lets business logic call repositories without knowing they exist. See docs/architecture.md."
+}

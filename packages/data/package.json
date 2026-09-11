@@ -1,0 +1,28 @@
+{
+  "name": "@tasks/data",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Layer 3 - data access. The only code in the project that issues SQL.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@tasks/core": "*",
+    "drizzle-orm": "^0.45.2",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.0",
+    "drizzle-kit": "^0.31.10"
+  }
+}

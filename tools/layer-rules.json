@@ -1,0 +1,39 @@
+{
+  "$comment": "Single source of truth for the layer boundaries. Read by eslint.config.js (lint time) and by tests/architecture.test.ts (test time) so the rule is defined once and enforced twice.",
+  "rules": [
+    {
+      "layer": "Business logic (layer 2)",
+      "path": "packages/core",
+      "forbidden": [
+        "express",
+        "express-session",
+        "connect-pg-simple",
+        "supertest",
+        "drizzle-orm",
+        "drizzle-kit",
+        "pg",
+        "pg-pool",
+        "postgres",
+        "nodemailer",
+        "bcrypt",
+        "bcryptjs",
+        "@tasks/data",
+        "@tasks/web",
+        "@tasks/scheduler"
+      ],
+      "message": "packages/core is the business logic layer: it may not import a web framework, an ORM, a database driver, a mail client, or any layer above it. It depends only on the port interfaces it declares itself."
+    },
+    {
+      "layer": "Presentation (layer 1)",
+      "path": "apps/web/src/server",
+      "forbidden": ["drizzle-orm", "drizzle-kit", "pg", "pg-pool", "postgres"],
+      "message": "The presentation layer contains no SQL and never touches the ORM or driver directly. Use a repository from @tasks/data."
+    },
+    {
+      "layer": "Scheduler process",
+      "path": "apps/scheduler/src",
+      "forbidden": ["express", "express-session", "drizzle-orm", "pg", "postgres"],
+      "message": "The scheduler drives business logic directly. It must not reach the database through the ORM itself, nor call the web application's HTTP API."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "//": "What ships. The same projects as tsconfig.json minus ./tests, so a production image does not compile the test suite - it is not shipped, it needs devDependencies, and a type error in a test should not be able to break an image build. `npm run typecheck` still uses tsconfig.json and covers everything.",
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/data" },
+    { "path": "./apps/scheduler" },
+    { "path": "./apps/web" },
+    { "path": "./apps/web/tsconfig.client.json" }
+  ]
+}

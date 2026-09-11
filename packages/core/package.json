@@ -1,0 +1,20 @@
+{
+  "name": "@tasks/core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Layer 2 - business logic. Pure TypeScript, no runtime dependencies.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "//": "This block is deliberately empty and tests/architecture.test.ts asserts that it stays empty. The business logic layer may not depend on a web framework, an ORM, a database driver, a mail client or a date library.",
+  "dependencies": {}
+}

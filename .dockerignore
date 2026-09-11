@@ -1,0 +1,30 @@
+# Build artefacts must never enter the build context.
+#
+# Note that .dockerignore patterns are NOT recursive: `*.tsbuildinfo` matches
+# only the context root, so every pattern below needs its `**/` twin. Getting
+# this wrong is subtle rather than loud - a stale `.tsbuildinfo` convinces
+# `tsc --build` that a project is already up to date, so it skips emitting
+# declaration files whose `dist/` directory was correctly excluded, and the
+# build fails much later with "cannot find module".
+node_modules
+**/node_modules
+
+dist
+**/dist
+dist-client
+**/dist-client
+dist-tsc
+**/dist-tsc
+
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+coverage
+**/coverage
+
+.git
+.github
+.env
+**/.env
+.DS_Store
+**/.DS_Store

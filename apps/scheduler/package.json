@@ -1,0 +1,28 @@
+{
+  "name": "@tasks/scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Reminder worker. Separate process, independent lifecycle, shares core and data with the web app.",
+  "main": "./dist/index.js",
+  "//": "Subpath exports so the test suite can reach the notifier and the email renderer. The root is deliberately not exported: importing it would start the tick loop.",
+  "exports": {
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@tasks/core": "*",
+    "@tasks/data": "*",
+    "nodemailer": "^9.0.6"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^8.0.1"
+  }
+}

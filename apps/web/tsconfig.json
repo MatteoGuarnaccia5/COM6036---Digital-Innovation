@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": ["src/server/**/*.ts", "src/shared/**/*.ts"],
+  "references": [{ "path": "../../packages/core" }, { "path": "../../packages/data" }],
+  "//": "Server-side presentation layer. The React client is a separate project (tsconfig.client.json) built by Vite."
+}

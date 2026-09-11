@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "files": [],
+  "references": [
+    { "path": "./packages/core" },
+    { "path": "./packages/data" },
+    { "path": "./apps/scheduler" },
+    { "path": "./apps/web" },
+    { "path": "./apps/web/tsconfig.client.json" },
+    { "path": "./tests" }
+  ]
+}
