@@ -9,10 +9,12 @@ layers but has an entirely independent lifecycle.
 
 - This repository cloned
 - docker installed
+- postgresql installed (for tests)
 
 ## Setup
 
 From the root of this project, create an `.env` file with the following credentials:
+
 ```bash
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -26,6 +28,7 @@ SMTP_FROM=yourgmail@gmail.com
 ## Run it
 
 Start the application
+
 ```bash
 docker compose up
 ```
@@ -75,12 +78,12 @@ flowchart TB
 
 ### The layer rules
 
-| Layer | Package | May not contain |
-| --- | --- | --- |
-| Presentation | `apps/web/src/server`, `apps/scheduler/src` | business rules, SQL |
-| Business logic | `packages/core` | Express, the ORM, any database driver, nodemailer, bcrypt |
-| Data access | `packages/data` | business rules, HTTP |
-| Database | PostgreSQL | — |
+| Layer          | Package                                     | May not contain                                           |
+| -------------- | ------------------------------------------- | --------------------------------------------------------- |
+| Presentation   | `apps/web/src/server`, `apps/scheduler/src` | business rules, SQL                                       |
+| Business logic | `packages/core`                             | Express, the ORM, any database driver, nodemailer, bcrypt |
+| Data access    | `packages/data`                             | business rules, HTTP                                      |
+| Database       | PostgreSQL                                  | —                                                         |
 
 - **All timezone conversion happens in the presentation layer.** Everything
   below it works exclusively in UTC.
@@ -94,6 +97,17 @@ Full detail, including the reminder-tick sequence diagram and the limits of the
 exactly-once guarantee: **[docs/architecture.md](docs/architecture.md)**.
 
 ## Tests
+
+#### Configure postgressql
+
+```bash
+# Create the correct role / db for the tests
+postgresql-setup --initdb
+sudo -u postgres psql -c "CREATE ROLE tasks LOGIN PASSWORD 'tasks' SUPERUSER;" # role
+sudo -u postgres createdb -O tasks tasks_test # database
+```
+
+#### Running tests
 
 ```bash
 npm install
